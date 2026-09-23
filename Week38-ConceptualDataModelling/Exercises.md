@@ -40,7 +40,19 @@ Using the entity descriptions from Theory Section 12, create an ER diagram that 
 > [!NOTE]
 > ***Your Answer***
 >
-> *(Write your answer here.)*
+> *(
+
+
+Week 37 used a 1:N relationship where each product could belong to only one category through `products.category_id`. This is not sufficient because a product can belong to multiple categories, such as Clothing and Accessories. Therefore, Week 38 changes the relationship to M:N and uses the `ProductCategory` junction entity to connect products and categories. The `ProductCategory` entity uses a composite primary key of `product_id` and `category_id` to prevent duplicate product-category links.
+
+
+
+
+
+
+https://imgur.com/a/exGCjzh
+
+)*
 >
 >
 >
@@ -396,7 +408,10 @@ FitZone is a local gym and fitness center. They need a database to manage their 
 > [!NOTE]
 > ***Your Answer***
 >
-> *(Add a link to your image here)*
+> *(
+
+https://imgur.com/a/yegYq7w
+)*
 >
 >
 >

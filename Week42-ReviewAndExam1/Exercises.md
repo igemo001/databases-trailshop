@@ -1,10 +1,10 @@
-# Week 42 — Exercises: Review and Exam 1 Preparation
+# Week 42 — Exercises: Review and Exam 1 Preparation (Optional)
 
 > [!IMPORTANT]
-> ***How to Complete These Exercises***
+> **_How to Complete These Exercises_**
 > Write your answers directly in the highlighted **Your Answer** / **Your SQL** fields below each task. Replace the placeholder text with your own work before submitting.
 
-## Exercise 1: TrailShop Project Task — Review and Verify
+## Exercise 1: TrailShop Project Task — Review and Verify (Optional)
 
 Before the exam, verify that your TrailShop database is complete and correct.
 
@@ -12,8 +12,8 @@ Before the exam, verify that your TrailShop database is complete and correct.
 
 Run the following checks and fix any issues:
 
-1. Confirm all 5 tables exist: `\dt`
-2. Confirm column definitions: `\d categories`, `\d customers`, `\d products`, `\d orders`, `\d order_items`
+1. Confirm all 6 tables exist: `\dt`
+2. Confirm column definitions: `\d categories`, `\d customers`, `\d products`, `\d product_categories`, `\d orders`, `\d order_items`
 3. Verify all PRIMARY KEY constraints exist
 4. Verify all FOREIGN KEY constraints exist
 5. Verify CHECK constraints on `price`, `stock`, `quantity`, `status`
@@ -22,7 +22,7 @@ Run the following checks and fix any issues:
 ### Task 1.2: Data Verification
 
 1. Run `SELECT COUNT(*) FROM table_name;` for each table — confirm you have data
-2. Run a query that joins all 5 tables to confirm relationships work:
+2. Run a query that joins all 6 tables to confirm relationships work:
 
 ```sql
 SELECT c.first_name, cat.name AS category, p.name AS product,
@@ -31,22 +31,27 @@ FROM order_items oi
 JOIN orders o ON oi.order_id = o.order_id
 JOIN customers c ON o.customer_id = c.customer_id
 JOIN products p ON oi.product_id = p.product_id
-JOIN categories cat ON p.category_id = cat.category_id
+JOIN product_categories pc ON pc.product_id = p.product_id
+JOIN categories cat ON cat.category_id = pc.category_id
 ORDER BY c.first_name, o.order_id;
 ```
 
-3. Test referential integrity: try to INSERT a product with a non-existent category_id — confirm it fails
+3. Test referential integrity: try to INSERT into `product_categories` with a non-existent `category_id` — confirm it fails
 4. Test CHECK constraint: try to UPDATE a product price to -5 — confirm it fails
 
 ---
 
-## Exercise 2: PetStore Mini-Case
+## Exercise 2: PetStore Mini-Case (Optional)
+
+> [!TIP]
+> **Recommended practice.** Do this section. It is not required to finish the TrailShop project. It is practice for Exam 1.
 
 This is a complete practice case similar to what you might see on the exam. Work through it from start to finish.
 
 ### 2.1 Business Description
 
 **PetStore** is a small shop selling pet supplies. They need a database to track:
+
 - **Product categories**: name (e.g., "Dog Food", "Cat Toys", "Fish Supplies")
 - **Products**: name, description, price, stock quantity, which category they belong to
 - **Customers**: first name, last name, email, phone
@@ -55,6 +60,7 @@ This is a complete practice case similar to what you might see on the exam. Work
 ### 2.2 ER Diagram (Conceptual)
 
 Draw or describe the ER diagram for PetStore:
+
 - Entities: categories, products, customers, sales
 - Relationships: products belong to categories (M:1), sales link customers and products (junction-like)
 
@@ -132,17 +138,17 @@ Write SQL for each, then check against the solution.
 **Q1: List all products with their category names, sorted by category then price.**
 
 > [!NOTE]
-> ***Your SQL***
+> **_Your SQL_**
 >
 > ```sql
 > -- Write your query here
+> SELECT pc.name AS category, pp.name AS product, pp.price
+> FROM pet_products pp
+> INNER JOIN pet_categories pc ON pp.category_id = pc.category_id
+> ORDER BY pc.name ASC, pp.price ASC;
 >
 >
 > ```
->
-
-
-
 
 <details>
 <summary>Solution</summary>
@@ -153,22 +159,26 @@ FROM pet_products pp
 INNER JOIN pet_categories pc ON pp.category_id = pc.category_id
 ORDER BY pc.name, pp.price;
 ```
+
 </details>
 
 **Q2: How much has each customer spent in total?**
 
 > [!NOTE]
-> ***Your SQL***
+> **_Your SQL_**
 >
 > ```sql
 > -- Write your query here
+> SELECT c.first_name || ' ' || c.last_name AS customer,
+>      SUM(s.quantity * s.unit_price) AS total_spent
+> FROM pet_customers c
+> INNER JOIN pet_sales s ON c.customer_id = s.customer_id
+> GROUP BY c.customer_id, c.first_name, c.last_name
+> ORDER BY total_spent DESC;
+> 
 >
 >
 > ```
->
-
-
-
 
 <details>
 <summary>Solution</summary>
@@ -181,22 +191,24 @@ INNER JOIN pet_sales s ON c.customer_id = s.customer_id
 GROUP BY c.customer_id, c.first_name, c.last_name
 ORDER BY total_spent DESC;
 ```
+
 </details>
 
 **Q3: Which categories have products that have never been sold?**
 
 > [!NOTE]
-> ***Your SQL***
+> **_Your SQL_**
 >
 > ```sql
 > -- Write your query here
+> SELECT DISTINCT pc.name AS category
+> FROM pet_categories pc
+> INNER JOIN pet_products pp ON pc.category_id = pp.category_id
+> LEFT JOIN pet_sales s ON pp.product_id = s.product_id
+> WHERE s.sale_id IS NULL;
 >
 >
 > ```
->
-
-
-
 
 <details>
 <summary>Solution</summary>
@@ -208,22 +220,26 @@ INNER JOIN pet_categories pc ON pp.category_id = pc.category_id
 LEFT JOIN pet_sales s ON pp.product_id = s.product_id
 WHERE s.sale_id IS NULL;
 ```
+
 </details>
 
 **Q4: What is the total revenue per category?**
 
 > [!NOTE]
-> ***Your SQL***
+> **_Your SQL_**
 >
 > ```sql
 > -- Write your query here
+> SELECT pc.name AS category,
+>         COALESCE(SUM(s.quantity * s.unit_price), 0) AS revenue
+> FROM pet_categories pc
+> LEFT JOIN pet_products pp ON pc.category_id = pp.category_id
+> LEFT JOIN pet_sales s ON pp.product_id = s.product_id
+> GROUP BY pc.category_id, pc.name
+> ORDER BY revenue DESC;
 >
 >
 > ```
->
-
-
-
 
 <details>
 <summary>Solution</summary>
@@ -237,22 +253,25 @@ LEFT JOIN pet_sales s ON pp.product_id = s.product_id
 GROUP BY pc.name
 ORDER BY revenue DESC;
 ```
+
 </details>
 
 **Q5: Find the most purchased product (by total quantity sold).**
 
 > [!NOTE]
-> ***Your SQL***
+> **_Your SQL_**
 >
 > ```sql
 > -- Write your query here
+> SELECT pp.name, SUM(s.quantity) AS total_sold
+> FROM pet_products pp
+> INNER JOIN pet_sales s ON pp.product_id = s.product_id
+> GROUP BY pp.product_id, pp.name
+> ORDER BY total_sold DESC
+> LIMIT 1;
 >
 >
 > ```
->
-
-
-
 
 <details>
 <summary>Solution</summary>
@@ -265,157 +284,188 @@ GROUP BY pp.product_id, pp.name
 ORDER BY total_sold DESC
 LIMIT 1;
 ```
+
 </details>
 
 ---
 
-## Exercise 3: Additional Practice — Mixed Topics
+## Exercise 3: Additional Practice — Mixed Topics (Optional)
+
+> [!TIP]
+> **Recommended practice.** Do this section. It is not required to finish the TrailShop project. It is practice for Exam 1.
 
 These 10 questions cover material from Weeks 36–41. Write your answers without looking at notes first, then check.
 
 ### 3.1 (Week 36 — Theory)
+
 Name three problems of file-based data management and explain how a database solves each one.
 
 > [!NOTE]
-> ***Your Answer***
+> **_Your Answer_**
 >
-> *(Write your answer here.)*
->
->
->
->
+> _Data Redundancy: File systems often duplicate data across different files (e.g., address in billing and shipping files). Databases solve this through normalization and centralized storage.
+> Data Inconsistency: Updating one file but forgetting another leads to conflicting facts. A database provides a single source of truth; updating a central record updates it everywhere.
+> Lack of Data Integrity: File systems lack strict rules. Databases solve this by enforcing constraints (like data types, NOT NULL, and FOREIGN KEY relationships) to ensure only valid data is saved._
 
 ### 3.2 (Week 37 — Theory)
+
 What is the difference between a candidate key and a primary key? Can a table have multiple candidate keys?
 
 > [!NOTE]
-> ***Your Answer***
+> **_Your Answer_**
 >
-> *(Write your answer here.)*
->
->
->
->
+> _A candidate key is any column or set of columns that can uniquely identify a row in a table. A primary key is the specific candidate key selected by the database designer to act as the main identifier for the table. Yes, a table can have multiple candidate keys (e.g., an employee_id, an email_address, and a social_security_number), but it can only have one primary key._
 
 ### 3.3 (Week 37 — Theory)
+
 State the referential integrity rule. What happens in PostgreSQL if you try to INSERT a row that violates it?
 
 > [!NOTE]
-> ***Your Answer***
+> **_Your Answer_**
 >
-> *(Write your answer here.)*
->
->
->
->
+> _The referential integrity rule states that any foreign key value must either match an existing primary key value in the referenced table or be NULL. If you try to insert a row that violates this rule in PostgreSQL, the database will throw a foreign key constraint violation error and block the insertion._
 
 ### 3.4 (Week 38 — Design)
+
 A library lends books to members. A member can borrow many books; a book can be borrowed by many members (over time). Draw or describe the ER model, including the junction entity.
 
 > [!NOTE]
-> ***Your Answer***
+> **_Your Answer_**
 >
-> *(Write your answer here.)*
->
->
->
->
+> _Entities: Members (1) and Books (1).
+> Relationship: Many-to-Many (M:N).
+> Junction Entity: Because it is an M:N relationship, a junction entity (e.g., Loans) is required. Members has a 1:M relationship with Loans, and Books has a 1:M relationship with Loans. The Loans entity stores the foreign keys for the member and the book, along with contextual data like checkout_date and return_date._
 
 ### 3.5 (Week 39 — Design)
+
 For the library scenario above, write the CREATE TABLE statements (at least 3 tables with appropriate keys and constraints).
 
 > [!NOTE]
-> ***Your SQL***
+> **_Your SQL_**
 >
 > ```sql
 > -- Write your query here
+> CREATE TABLE members (
+    member_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL);
+    CREATE TABLE books (
+    book_id SERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    isbn CHAR(13) UNIQUE NOT NULL
+    );CREATE TABLE loans (
+    member_id INTEGER REFERENCES members(member_id) ON DELETE CASCADE,
+    book_id INTEGER REFERENCES books(book_id) ON DELETE CASCADE,
+    checkout_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    return_date DATE,
+    PRIMARY KEY (member_id, book_id, checkout_date)
+    );
 >
 >
 > ```
 
 ### 3.6 (Week 40 — DDL)
+
 Write an ALTER TABLE statement that adds a `discount_percent NUMERIC(4,2) CHECK (discount_percent BETWEEN 0 AND 50)` column to a `products` table.
 
 > [!NOTE]
-> ***Your SQL***
+> **_Your SQL_**
 >
 > ```sql
 > -- Write your query here
+> ALTER TABLE products
+> ADD COLUMN discount_percent NUMERIC(4,2) CHECK (discount_percent BETWEEN 0 AND 50);
 >
 >
 > ```
 
 ### 3.7 (Week 40 — DML)
+
 Write an INSERT statement that adds 3 rows to a `books` table with columns: title (VARCHAR), author (VARCHAR), isbn (CHAR(13)), price (NUMERIC). Make up realistic data.
 
 > [!NOTE]
-> ***Your SQL***
+> **_Your SQL_**
 >
 > ```sql
 > -- Write your query here
+> INSERT INTO books (title, author, isbn, price) VALUES
+> ('The Hobbit', 'J.R.R. Tolkien', '9780261102217', 15.99),
+> ('Dune', 'Frank Herbert', '9780441172719', 19.99),
+> ('Neuromancer', 'William Gibson', '9780441569595', 14.50);
 >
 >
 > ```
 
 ### 3.8 (Week 41 — Querying)
+
 Explain in plain English what this query returns:
+
 ```sql
 SELECT c.name, COUNT(p.product_id)
 FROM categories c
-LEFT JOIN products p ON c.category_id = p.category_id
+LEFT JOIN product_categories pc ON pc.category_id = c.category_id
+LEFT JOIN products p ON p.product_id = pc.product_id
 GROUP BY c.name
 HAVING COUNT(p.product_id) = 0;
 ```
 
 > [!NOTE]
-> ***Your Answer***
+> **_Your Answer_**
 >
-> *(Write your answer here.)*
->
->
->
->
+> _This query returns a list of category names that currently have zero products assigned to them. It does this by grabbing all categories, attaching any linked products via a LEFT JOIN, and then filtering the final grouped output to only show categories where the count of associated products is exactly 0._
 
 ### 3.9 (Week 41 — Querying)
+
 Write a query that finds the top 3 customers by total spending, showing their full name and total amount spent.
 
 > [!NOTE]
-> ***Your SQL***
+> **_Your SQL_**
 >
 > ```sql
 > -- Write your query here
+> SELECT c.first_name || ' ' || c.last_name AS full_name,
+>         SUM(oi.quantity * oi.unit_price) AS total_spent
+> FROM customers c
+> JOIN orders o ON c.customer_id = o.customer_id
+> JOIN order_items oi ON o.order_id = oi.order_id
+> GROUP BY c.customer_id, c.first_name, c.last_name
+> ORDER BY total_spent DESC
+> LIMIT 3;
 >
 >
 > ```
 
 ### 3.10 (Week 41 — Querying)
+
 Explain why this query is invalid:
+
 ```sql
-SELECT category_id, name, AVG(price)
-FROM products
-GROUP BY category_id;
+SELECT pc.category_id, p.name, AVG(p.price)
+FROM products p
+JOIN product_categories pc ON pc.product_id = p.product_id
+GROUP BY pc.category_id;
 ```
 
 > [!NOTE]
-> ***Your Answer***
+> **_Your Answer_**
 >
-> *(Write your answer here.)*
->
->
->
->
+> _The query is invalid because p.name is included in the SELECT list but is neither wrapped in an aggregate function (like MIN or MAX) nor included in the GROUP BY clause. When SQL collapses the rows by category_id, it does not know which individual product name to display for that grouped category._
 
 ---
 
-## Exercise 4: Timed Practice Exercise (30 minutes)
+## Exercise 4: Timed Practice Exercise (30 minutes) (Optional)
 
-Set a timer for 30 minutes. Complete as much as possible without looking at notes.
+> [!TIP]
+> **Recommended practice.** Do this section. It is not required to finish the TrailShop project. It is practice for Exam 1.
+
+Set a timer for 30 minutes. Complete as much as possible without looking at notes. If you can complete all queries within the time limit the exam will be extremely easy.
 
 ### Scenario: BookClub Database
 
 A book club tracks its members, books, and reading sessions.
 
 **Requirements:**
+
 - Members: first_name, last_name, email (unique), join_date
 - Books: title, author, isbn (unique, 13 chars), genre, page_count
 - Reading sessions: which member read which book, start_date, end_date (nullable — still reading), rating (1-5, nullable — not yet rated)
@@ -429,6 +479,7 @@ A book club tracks its members, books, and reading sessions.
 **Task C (2 min):** Write an UPDATE that sets the end_date of member 1's reading of book 2 to today, and the rating to 4.
 
 **Task D (5 min):** Write queries for:
+
 1. All books that member 1 has read (show title, rating)
 2. Average rating per book (only completed readings)
 3. Members who have never rated any book below 3
@@ -438,7 +489,7 @@ A book club tracks its members, books, and reading sessions.
 **Task F (5 min):** Write a query finding books that NO member has read yet.
 
 > [!NOTE]
-> ***Your SQL***
+> **_Your SQL_**
 >
 > ```sql
 > -- Paste your SQL for Tasks A–F here
@@ -447,11 +498,12 @@ A book club tracks its members, books, and reading sessions.
 > ```
 
 **Task G (5 min):** Write ALTER TABLE statements to:
+
 1. Add a `pages_read INTEGER DEFAULT 0` column to reading sessions
 2. Add a CHECK constraint ensuring pages_read <= the book's page_count (Hint: this requires a trigger or application logic — explain why a simple CHECK can't do cross-table validation)
 
 > [!NOTE]
-> ***Your SQL***
+> **_Your SQL_**
 >
 > ```sql
 > -- Write your ALTER TABLE statements here
@@ -460,19 +512,20 @@ A book club tracks its members, books, and reading sessions.
 > ```
 
 > [!NOTE]
-> ***Your Answer***
+> **_Your Answer_**
 >
-> *(Explain why a simple CHECK constraint cannot validate pages_read against the book's page_count across tables.)*
->
->
->
->
+> _(Explain why a simple CHECK constraint cannot validate pages_read against the book's page_count across tables.)_
 
 ---
 
 ## Submission Checklist
 
+**Required**
+
 - [ ] TrailShop database verified (schema + data + constraints tested)
+
+**Recommended practice** (Exam 1 preparation)
+
 - [ ] PetStore mini-case completed (tables created, data inserted, all 5 queries working)
 - [ ] All 10 mixed-topic questions answered
 - [ ] Timed practice completed (note how much you finished in 30 minutes)

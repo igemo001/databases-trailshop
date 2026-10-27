@@ -246,59 +246,71 @@ Answer in your own words:
 1. What is the logical execution order of a SQL query? Why does it matter?
 
 > [!NOTE]
-> **_Your Answer_**
->
-> _The logical execution order is: FROM/JOIN -> WHERE -> GROUP BY -> HAVING -> SELECT -> DISTINCT -> ORDER BY -> LIMIT/OFFSET. This matters heavily because it dictates when aliases and aggregations become available. For instance, you cannot use a SELECT column alias in your WHERE clause because the WHERE filter runs before the SELECT calculation occurs_
+> Although SQL queries are written starting with the SELECT clause, the database does not execute them in that order. SQL follows a logical execution order, which determines how the query is processed internally. The correct logical order is:
+
+FROM → ON → JOIN → WHERE → GROUP BY → HAVING → SELECT → DISTINCT → ORDER BY → LIMIT
+
+> First, SQL loads data from the tables mentioned in the FROM clause. If there are joins, the database applies the ON conditions and performs the JOIN operation to combine rows. After the tables are combined, the WHERE clause filters individual rows. Next, if the query uses grouping, the GROUP BY clause organizes rows into groups. The HAVING clause then filters these groups based on aggregate conditions. Only after all these steps does SQL evaluate the SELECT clause, compute expressions, and create column aliases. If DISTINCT is used, duplicate rows are removed. Finally, ORDER BY sorts the result, and LIMIT returns the required number of rows.
+
+This order matters because it explains many common SQL behaviors. For example, aliases created in SELECT cannot be used in WHERE, because WHERE executes earlier. It also clarifies why WHERE filters rows but HAVING filters groups. Understanding this order helps avoid logical errors, write correct queries, and predict how SQL will process complex operations.
 
 2. What is the difference between WHERE and HAVING? Give an example of when you would use each.
 
 > [!NOTE]
-> **_Your Answer_**
->
-> _WHERE filters individual rows before they are grouped together, while HAVING filters aggregated groups after they have been grouped. You would use WHERE stock > 0 to exclude out-of-stock items early on, and HAVING SUM(stock) > 100 to filter down to categories that have a large combined inventory._
+>WHERE is used to filter individual rows before any grouping happens. It removes rows that do not meet the condition. Because it works before grouping, you cannot use aggregate functions like SUM(), COUNT(), or AVG() inside WHERE.
+> SELECT *
+FROM products
+WHERE price > 100;
 
+
+HAVING is used to filter groups after the GROUP BY step. Once rows are grouped, HAVING checks conditions on those groups. Because it works after grouping, you can use aggregate functions inside HAVING.
+>SELECT category, SUM(sales) AS total_sales
+FROM products
+GROUP BY category
+HAVING SUM(sales) > 10000;
+
+> 
 3. Explain the difference between COUNT(\*), COUNT(column), and COUNT(DISTINCT column).
 
 > [!NOTE]
-> **_Your Answer_**
+> COUNT(*) counts every row in the table, including rows that contain NULL values. It does not check any specific column, it simply counts how many total rows exist. COUNT(column) is different because it only counts the rows where that column has a non‑NULL value. If the column contains NULLs, those rows are ignored in the count. COUNT(DISTINCT column) goes one step further by counting only the unique, non‑NULL values in that column. This means duplicates are removed before counting. For example, if a column has repeated values or NULLs, COUNT(DISTINCT column) will return the number of unique values that actually appear.
 >
-> _COUNT(*) tallies every single row in a result set regardless of NULL values. COUNT(column) only counts rows where that specific column contains actual data (ignoring NULLs). COUNT(DISTINCT column) counts only the unique, non-repeating, non-NULL values present in that column._
-
+> 
 4. What is the difference between INNER JOIN and LEFT JOIN? When would you choose one over the other?
 
 > [!NOTE]
-> **_Your Answer_**
+>An INNER JOIN returns only the rows that have matching values in both tables. If a row in the left table does not have a corresponding match in the right table, it is not included in the result. This join is used when you want to see only the records that exist in both tables. A LEFT JOIN, on the other hand, returns all rows from the left table, even if there is no matching row in the right table. When there is no match, the columns from the right table appear as NULL. You choose INNER JOIN when you need strictly matched data from both tables, such as finding customers who have placed orders. You choose LEFT JOIN when you want to keep all rows from the left table, even if some do not have related data, such as listing all customers and showing their orders, including those who have never ordered anything.
 >
-> _An INNER JOIN only returns rows that have matching records in both tables, while a LEFT JOIN returns everything from the first (left) table and fills in NULLs if no matching record exists in the right table. You choose INNER JOIN when you only want customers who have ordered, and LEFT JOIN when you want to see all customers whether they have ordered or not._
+>
 
 5. Why should you avoid SELECT \* in production code?
 
 > [!NOTE]
-> **_Your Answer_**
+> Using SELECT \* in production code is discouraged because it returns all columns, even the ones you don’t need. This makes queries slower, increases network load, and can cause unexpected issues if the table structure changes. For example, if new columns are added later, your application will start receiving extra data that it never asked for, which can break code or reduce performance. SELECT \* also makes the query harder to read and understand because it hides which columns are actually required. In production, it is better to list only the specific columns you need so the query stays efficient, stable, and clear.
 >
-> _You should avoid SELECT * because it retrieves more data than necessary, harming performance. Additionally, if the table schema changes (columns are added or removed), the application expecting specific columns in a specific order will likely break._
+> 
 
 6. What does DISTINCT do? On what level does it operate (columns or entire rows)?
 
 > [!NOTE]
-> **_Your Answer_**
+> DISTINCT is used to remove duplicate rows from the result of a query. It operates on the entire row, not just one column. When you write SELECT DISTINCT column, it returns unique values from that column, but internally SQL still checks the whole row being selected. If you select multiple columns with DISTINCT, SQL only returns rows where the combination of those column values is unique.
+
+For example, SELECT DISTINCT city returns each city once. But SELECT DISTINCT city, country returns unique pairs of city and country. This shows that DISTINCT works at the row level, based on all columns included in the SELECT statement.
 >
-> _DISTINCT removes duplicate records from the output. It operates at the entire row level; two rows must have identical data across every single column specified in the SELECT statement in order for one to be discarded as a duplicate._
 
 7. Can you use a column alias in a WHERE clause? Why or why not?
 
 > [!NOTE]
-> **_Your Answer_**
+> You cannot use a column alias in a WHERE clause because the WHERE clause is executed before the SELECT clause. SQL creates the alias only during the SELECT step, but filtering with WHERE happens earlier. Since the alias does not exist yet, SQL cannot recognize it in the WHERE condition.
 >
-> _No, you cannot. Based on the logical execution order of SQL, the WHERE clause runs to filter rows before the SELECT clause actually assigns the aliases. The database doesn't know the alias exists yet._
+> 
 >
 > 8. Explain what happens when you GROUP BY a column and there's a column in SELECT that isn't aggregated and isn't in GROUP BY.
 
 > [!NOTE]
-> **_Your Answer_**
+>When you use GROUP BY in a query, every column in the SELECT list must either be aggregated (using functions like SUM, COUNT, AVG) or must appear in the GROUP BY clause. If a column in SELECT is not aggregated and not included in GROUP BY, SQL does not know which value to show for that column because grouping combines multiple rows into one.
+>For example, if you group by department but also select employee_name without aggregating it, SQL cannot decide which employee name to display for that department because there may be many employees in the same group. This is why SQL requires that all non‑aggregated columns must be listed in GROUP BY.
 >
-> _PostgreSQL will throw an error. If you collapse multiple rows into one group based on a column (like category), the database does not know which product name to display unless you specify an aggregate function (like MAX) or include that column in the GROUP BY logic._
-
 ---
 
 ## Exercise 3: Query Writing Exercises (Optional)

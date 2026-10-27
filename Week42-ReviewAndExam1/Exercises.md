@@ -449,9 +449,7 @@ GROUP BY pc.category_id;
 > [!NOTE]
 > **_Your Answer_**
 >
-> _The query is invalid because p.name is included in the SELECT list but is neither wrapped in an aggregate function (like MIN or MAX) nor included in the GROUP BY clause. When SQL collapses the rows by category_id, it does not know which individual product name to display for that grouped category._
-
----
+> 
 
 ## Exercise 4: Timed Practice Exercise (30 minutes) (Optional)
 

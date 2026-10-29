@@ -304,7 +304,11 @@ For each statement, write **True** or **False** and correct any false statements
 5. The conceptual level of the three-schema architecture describes how data is physically stored on disk.
 
 > [!NOTE]
-> ***Your Answer***
+> 1. F
+> 2. T
+> 3. T
+> 4. F
+> 5. F
 >
 > _(Write True/False and corrections for all five statements above.)_
 
@@ -343,16 +347,16 @@ Match each term (1–10) with its definition (A–J).
 >
 > | #   | Your Match |
 > | --- | ---------- |
-> | 1   |            |
-> | 2   |            |
-> | 3   |            |
-> | 4   |            |
-> | 5   |            |
-> | 6   |            |
-> | 7   |            |
-> | 8   |            |
-> | 9   |            |
-> | 10  |            |
+> | 1   |  F          |
+> | 2   | H      |
+> | 3   | B           |
+> | 4   | A           |
+> | 5   | C           |
+> | 6   | G           |
+> | 7   |   D         |
+> | 8   |   E         |
+> | 9   |   I         |
+> | 10  |     J       |
 
 ---
 

@@ -203,24 +203,50 @@ Answer the following in your own words (write 2–3 sentences per point):
 1. List **3 specific problems** TrailShop would face if they kept using spreadsheets as their product catalog grows to 5,000+ items with 10 staff members.
 
 > [!NOTE]
-> ***Your Answer***
+>Data becomes inconsistent across multiple files  
+With many staff updating different spreadsheets, product prices, stock levels, and descriptions will quickly become mismatched. One file may show a product in stock while another shows it sold out, causing wrong orders and customer complaints.
+
+Frequent overwriting and lost changes  
+Spreadsheets don’t handle multiple editors well. If two staff open the same file and save their changes, one person’s work can overwrite the other’s. As the catalog grows, this becomes a daily problem and leads to missing or corrupted data.
+
+Slow, manual, and error‑prone reporting  
+Pulling reports from several large spreadsheets becomes extremely time‑consuming. Staff must copy, merge, and clean data manually, which increases mistakes. Simple tasks like checking low‑stock items or total inventory value take far longer than they should.
 >
-> _(Write your answer here.)_
+>Switching TrailShop to a database gives three major benefits that directly solve their spreadsheet problems. First, a database provides one centralized place for all product information, so every staff member sees the same prices, stock levels, and descriptions, completely removing the inconsistency that happens when multiple spreadsheets exist. Second, databases handle many users at the same time through proper locking and transactions, which prevents the overwriting and lost changes that occur when several people edit the same spreadsheet. Third, reporting becomes fast and reliable because SQL can instantly filter, sort, and join large amounts of data, eliminating the slow, error‑prone manual merging that spreadsheets require when the catalog grows to thousands of items.
 
 2. List **3 benefits** of switching to a database system, explaining how each one solves a problem from your list above.
 
 > [!NOTE]
-> ***Your Answer***
->
-> _(Write your answer here.)_
+> 
+> 1. Reduced data redundancy
+A database stores data in a structured, centralized way, so the same data is not duplicated in multiple files.
+
+2. Better data consistency and integrity
+Rules like primary keys, foreign keys, and constraints ensure the data stays accurate and reliable.
+
+3. Improved data sharing and concurrency
+Multiple users can safely access and update the data at the same time without conflicts.
 
 3. Explain the three-schema architecture in your own words. Why is the separation into three levels useful?
 
 > [!NOTE]
 > ***Your Answer***
 >
-> _(Write your answer here.)_
+>The three‑schema architecture is a way of organizing a database into three separate levels, each with a different purpose:
 
+1. External Level (User View)
+This is what individual users or applications see.
+Each user can have a different view of the same database — for example, a doctor sees patient details, while an accountant sees billing information.
+
+2. Conceptual Level (Logical Structure)
+This level describes the overall logical design of the database:
+tables, relationships, constraints, keys, and rules.
+It is the unified view of the entire database.
+
+3. Internal Level (Physical Storage)
+This level describes how data is actually stored on disk:
+indexes, file organization, data blocks, and physical structures.
+The three‑schema architecture is useful because it gives the database data independence. Changes in one level do not force changes in the others. You can modify the physical storage (internal level) to improve performance without affecting the logical design, and you can change the logical design without breaking user views. This separation makes databases easier to maintain, safer to update, and more flexible as applications grow.
 ---
 
 ## Part 2: Theory Review Questions
@@ -235,7 +261,12 @@ _(See Section 1 of this week's Theory material.)_
 > [!NOTE]
 > ***Your Answer***
 >
-> _(Write your answer here.)_
+>Data is raw, unprocessed facts.
+Information is data that has been organized or interpreted so it becomes meaningful.
+
+For TrailShop:
+“5000, Hiking Boots, 89.90, 12” is data — just numbers and labels.
+But “Hiking Boots are low stock with only 12 units left” is information — it tells TrailShop something useful for decision‑making.
 
 **Q2.** List and explain three disadvantages of file-based data management systems. For each, describe how it would affect TrailShop specifically.
 _(See Section 2 of this week's Theory material.)_
@@ -243,13 +274,22 @@ _(See Section 2 of this week's Theory material.)_
 > [!NOTE]
 > ***Your Answer***
 >
-> _(Write your answer here.)_
+> File‑based data management causes serious problems because each file becomes its own isolated copy of the truth. The first disadvantage is data redundancy and inconsistency: when TrailShop keeps product details in multiple spreadsheets, staff inevitably update different files at different times. As the catalog grows, prices, stock levels, and product descriptions drift apart, so customers see outdated prices online while the warehouse sees different stock numbers. A second disadvantage is poor concurrency control. Spreadsheets cannot safely handle many users editing at once, so with ten staff members, TrailShop would constantly face overwritten changes, corrupted files, and lost updates whenever two people open and save the same sheet. The third disadvantage is data isolation, meaning information is scattered across separate files with different formats. For TrailShop, answering simple questions like “Which products are low stock?” or “What sold last month?” requires manually merging spreadsheets, writing ad‑hoc scripts, and dealing with mismatched product IDs, a slow, error‑prone process that becomes unmanageable as the business grows.
 
 **Q3.** What is a DBMS? List four of its core functions.
 _(See Sections 3 and 4 of this week's Theory material.)_
 
 > [!NOTE]
-> ***Your Answer***
+> A DBMS (Database Management System) is software that stores, organizes, and manages data in a database. It lets users create, read, update, and delete data easily while keeping the data safe, consistent, and accessible.
+
+- A DBMS first provides data definition, which means it allows you to create and define the structure of the database — tables, columns, data types, constraints, and relationships. This is done using DDL commands like CREATE and ALTER.
+
+Next, it performs data manipulation, which means inserting, updating, deleting, and retrieving data stored in the database. These actions are done using DML commands such as INSERT, UPDATE, DELETE, and SELECT.
+
+A DBMS also maintains a data dictionary, which is a special set of tables that stores metadata about the database itself. It keeps information about table names, column names, data types, constraints, indexes, and user permissions. This makes the database self‑describing.
+
+Finally, a DBMS handles concurrency control, ensuring that multiple users can access and modify data at the same time without causing conflicts or losing updates. It uses techniques like locking and MVCC to keep data consistent even when many people are working simultaneously.
+
 >
 > _(Write your answer here.)_
 
@@ -259,14 +299,20 @@ _(See Section 5.2 of this week's Theory material.)_
 > [!NOTE]
 > ***Your Answer***
 >
-> _(Write your answer here.)_
+> Program–data independence means that changes to how data is stored do not require changes to the application programs that use that data.
+> TrailShop has a products table. Suppose the DBA adds an index, moves the table to a new disk, or changes the physical file format. Even after these changes, TrailShop’s application can still run.
+> Program–data independence is important because it makes databases easy to maintain and safe to evolve. DBAs can optimize storage, reorganize files, or improve performance without breaking applications. Developers don’t need to rewrite code every time the database structure changes. This reduces bugs, lowers maintenance cost, and keeps systems flexible as TrailShop grows.
 
 **Q5.** What is metadata? Give two examples of metadata for a `products` table.
 _(See Section 8 of this week's Theory material.)_
 
 > [!NOTE]
-> ***Your Answer***
->
+>Metadata is data about data, it describes the structure, rules, and properties of the actual data stored in a table.
+
+Two examples for a products table
+The data type of each column, such as price DECIMAL(8,2) or name VARCHAR(100).
+
+The constraints, such as PRIMARY KEY (product_id) or NOT NULL on name.
 > _(Write your answer here.)_
 
 **Q6.** What is the three-schema architecture? Name and briefly describe each level.
@@ -275,7 +321,18 @@ _(See Section 3.3 of this week's Theory material.)_
 > [!NOTE]
 > ***Your Answer***
 >
-> _(Write your answer here.)_
+>1. External Level (User View)
+This is what individual users or applications see.
+Each user can have a different view of the same database — for example, a doctor sees patient details, while an accountant sees billing information.
+
+2. Conceptual Level (Logical Structure)
+This level describes the overall logical design of the database:
+tables, relationships, constraints, keys, and rules.
+It is the unified view of the entire database.
+
+3. Internal Level (Physical Storage)
+This level describes how data is actually stored on disk:
+indexes, file organization, data blocks, and physical structures.
 
 **Q7.** Explain the difference between logical data independence and physical data independence.
 _(See Section 3.4 of this week's Theory material.)_
@@ -283,7 +340,9 @@ _(See Section 3.4 of this week's Theory material.)_
 > [!NOTE]
 > ***Your Answer***
 >
-> _(Write your answer here.)_
+>Logical data independence means you can change the logical structure of the database without affecting the application programs. Logical structure refers to tables, columns, relationships, and constraints. For example, if you add a new column to a table, existing queries that do not use that column continue to work normally. This independence makes the database easier to modify and evolve over time.
+
+Physical data independence means you can change the physical storage of the database without affecting the logical structure or the application programs. Physical storage includes file organization, indexes, data blocks, and disk placement. For example, adding an index or moving data to a faster disk does not require any changes to the SQL queries. This independence allows DBAs to optimize performance without disturbing developers.
 
 **Q8.** What is a transaction? Why is atomicity important? Give a TrailShop example.
 _(See Section 5.5 of this week's Theory material.)_
@@ -291,8 +350,9 @@ _(See Section 5.5 of this week's Theory material.)_
 > [!NOTE]
 > ***Your Answer***
 >
-> _(Write your answer here.)_
+>A transaction is a group of one or more database operations that must be treated as a single unit of work. Atomicity is important because it guarantees that either all the steps succeed or none of them do, preventing partial updates that could corrupt data.
 
+For TrailShop, imagine a customer places an order: the system must insert the order, insert the order_items, and reduce the stock. If atomicity didn’t exist and the stock update failed after the order was created, TrailShop would end up with an order in the system but no stock reduction, causing inaccurate inventory and possible overselling. Atomicity ensures the whole operation is rolled back, keeping the data correct.
 ### True/False
 
 For each statement, write **True** or **False** and correct any false statements.

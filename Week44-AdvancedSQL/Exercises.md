@@ -278,58 +278,72 @@ Answer these in your own words (2–4 sentences each):
 > [!NOTE]
 > **_Your Answer_**
 >
-> An INNER JOIN only returns rows where there is a match in both tables. A LEFT JOIN returns all rows from the left table, and includes matched data from the right table (filling in NULLs if no match exists). You choose a LEFT JOIN when you want to preserve all records from your primary table, such as finding customers who have never placed an order.
+>An INNER JOIN returns only the rows that have matching values in both tables. If there is no match between the tables, that row is excluded from the result. A LEFT JOIN returns all rows from the left table and any matching rows from the right table, showing NULL values where no match exists. I would choose a LEFT JOIN when I need to keep all records from the left table, even if some of them do not have related data in the other table, such as listing all customers including those who have never placed an order.
 
 2. Explain what a correlated subquery is. Why can it be slower than an uncorrelated subquery?
 
 > [!NOTE]
 > **_Your Answer_**
->
-> A correlated subquery is a nested query that references a column from the outer query. It can be significantly slower because the database engine must execute the inner query once for every single row processed by the outer query, acting like a loop, whereas an uncorrelated subquery only executes once.
+>A correlated subquery is a subquery that depends on values from the outer query. It cannot run independently because it uses a column from the outer query to produce its result. For each row processed by the outer query, the correlated subquery is executed again.
 
+A correlated subquery can be slower than an uncorrelated subquery because it may run repeatedly, once for every row in the outer query. An uncorrelated subquery runs only once and returns a result that the main query can use directly. Because correlated subqueries require more repeated processing, they often use more time and resources, especially on large datasets.
+>
 3. What is the difference between `IN` and `EXISTS`? When might you prefer EXISTS?
 
 > [!NOTE]
 > **_Your Answer_**
 >
-> IN checks if a specific value matches any value within a generated list, while EXISTS simply checks if a subquery returns any rows at all (evaluating to true/false). EXISTS is highly preferred for performance on large datasets because it "short-circuits" and stops searching the moment it finds the first matching row.
+> IN and EXISTS are both used to check whether related data exists in another query, but they work differently. IN compares a value with a list of values returned by a subquery, while EXISTS simply checks whether the subquery returns any rows. If at least one matching row is found, EXISTS returns true.
+
+You might prefer EXISTS when working with large tables because it can stop searching as soon as it finds a match, making it more efficient in some cases. It is commonly used with correlated subqueries where you only need to know whether related records exist, rather than comparing against a complete list of values.
 
 4. What rules must two SELECT statements follow to be combined with UNION?
 
 > [!NOTE]
 > **_Your Answer_**
 >
-> Both SELECT statements must return the exact same number of columns. Furthermore, the corresponding columns in each query must have compatible data types in the same sequential order.
+> To combine two SELECT statements using UNION, both queries must return the same number of columns, and the corresponding columns must have compatible data types. The columns should also appear in the same order because SQL matches the first column of one query with the first column of the other, the second with the second, and so on.
+
+When these rules are followed, UNION combines the results of both queries into a single result set and automatically removes duplicate rows. If you want to keep duplicates, you can use UNION ALL instead.
 
 5. Explain the difference between UNION and UNION ALL. When would you use each?
 
 > [!NOTE]
 > **_Your Answer_**
 >
-> NION combines result sets and automatically removes duplicate rows, whereas UNION ALL combines them but keeps all duplicates. You should use UNION ALL when you explicitly want to see duplicates or when you already know the datasets don't overlap, as skipping the deduplication step makes it run much faster.
+>UNION combines the results of two or more SELECT statements and automatically removes duplicate rows. This is useful when you want a list of unique results and do not want the same row to appear more than once.
+
+UNION ALL also combines the results of multiple SELECT statements, but it keeps all rows, including duplicates. Because it does not spend time removing duplicates, it is usually faster than UNION.
+
+I would use UNION when I need only unique records, such as creating a combined list of customers from different tables without repetition. I would use UNION ALL when duplicates are important or when I want better performance and know that removing duplicates is unnecessary.
 
 6. What is a view? Name two advantages of using views.
 
 > [!NOTE]
 > **_Your Answer_**
 >
-> A view is a saved, named SQL query that acts as a virtual table in the database. Two major advantages are that it simplifies complex queries for end-users (abstraction) and enhances security by restricting access to only specific columns or rows instead of the underlying base tables.
+>A view is a virtual table that is created from the result of a SQL query. It does not store the data itself but displays data from one or more underlying tables whenever it is queried.
+
+One advantage of using views is that they simplify complex queries by saving commonly used joins or calculations in a reusable form. Another advantage is that they improve security by allowing users to access only specific columns or rows without giving them access to the entire table.
 >
 > 7. What does `WITH CHECK OPTION` do on an updatable view?
 
 > [!NOTE]
 > **_Your Answer_**
 >
->WITH CHECK OPTION prevents users from executing an INSERT or UPDATE statement through the view if the resulting row would violate the view's WHERE clause. This ensures that any data modified through the view remains visible within that view after the modification.
+>WITH CHECK OPTION is used when creating an updatable view to ensure that any data inserted or updated through the view still satisfies the view's conditions. If a change would cause a row to no longer meet the view's criteria, SQL rejects the operation.
+
+For example, if a view shows only employees with a salary greater than 3000, WITH CHECK OPTION prevents users from updating a salary to 2500 through that view. This helps maintain data consistency and ensures that all rows visible through the view continue to meet its filtering rules.
 
 8. How does a CTE differ from a derived table (subquery in FROM)? What's the main advantage of CTEs?
 
 > [!NOTE]
 > **_Your Answer_**
 >
-> A derived table is written directly inline within the FROM clause and cannot be reused, while a CTE is defined at the very top of the query using the WITH clause. The main advantage of a CTE is that it significantly improves readability by structuring logic sequentially, and it can be referenced multiple times throughout the same main query.
+> A CTE (Common Table Expression) and a derived table both create temporary result sets that can be used in a query. The main difference is that a derived table is written inside the FROM clause, while a CTE is defined at the beginning of the query using the WITH keyword.
+> The main advantage of CTEs is that they make complex queries easier to read, organize, and maintain. A CTE can also be referenced multiple times within the same query, which helps avoid repeating the same subquery and makes the SQL code more understandable.
 
----
+
 
 ## 3. Query Writing Exercises (Optional)
 

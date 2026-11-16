@@ -36,7 +36,8 @@ Sample data:
 > ***Your SQL***
 >
 > ```sql
-> -- Write your query here
+> -- The primary key is a composite key:
+PRIMARY KEY (supplier_id, product_id)
 >
 >
 > ```
@@ -45,7 +46,15 @@ Sample data:
 > ***Your SQL***
 >
 > ```sql
-> -- Write your query here
+> -- Partial Dependencies (depend on part of the PK):
+supplier_id -> supplier_name, supplier_email, supplier_city
+product_id -> product_name, category_id, category_name
+
+-- Transitive Dependencies:
+category_id -> category_name
+
+-- Full Dependencies (depend on the entire PK):
+(supplier_id, product_id) -> supply_price, lead_time_days
 >
 >
 > ```
@@ -54,7 +63,9 @@ Sample data:
 > ***Your SQL***
 >
 > ```sql
-> -- Write your query here
+> Insertion Anomaly: You cannot add a new supplier to the database unless they already supply a product (because product_id is part of the Primary Key and cannot be NULL).
+Update Anomaly: If 'NordGear Oy' moves their office from Helsinki to Tampere, you must update the city in every single row where they supply a product. Missing one row creates inconsistent data.
+Deletion Anomaly: If you stop selling the 'Rain Jacket Pro' (Product 201) and delete its row, you lose all information about 'OutdoorPro AB' if that was the only product they supplied.
 >
 >
 > ```
@@ -63,7 +74,18 @@ Sample data:
 > ***Your SQL***
 >
 > ```sql
-> -- Write your query here
+> -- Step 1 (1NF): The original table is in 1NF as it has atomic values and a defined PK.
+-- Step 2 (2NF): Remove partial dependencies into separate tables.
+suppliers(supplier_id, supplier_name, supplier_email, supplier_city)
+products_2NF(product_id, product_name, category_id, category_name)
+supplier_pricing(supplier_id, product_id, supply_price, lead_time_days)
+
+-- Step 3 (3NF): Remove transitive dependencies (category_id -> category_name in products).
+suppliers(supplier_id [PK], supplier_name, supplier_email, supplier_city)
+categories(category_id [PK], category_name)
+products(product_id [PK], product_name, category_id [FK])
+supplier_pricing(supplier_id [FK], product_id [FK], supply_price, lead_time_days) 
+-- PK for supplier_pricing is (supplier_id, product_id)
 >
 >
 > ```
@@ -72,7 +94,11 @@ Sample data:
 > ***Your SQL***
 >
 > ```sql
-> -- Write your query here
+> (supplier_id, product_id) ────────────> supply_price, lead_time_days
+      │             │
+      │             └─> product_name, category_id ──> category_name
+      │
+      └─> supplier_name, supplier_email, supplier_city
 >
 >
 > ```
@@ -84,7 +110,11 @@ Sample data:
 > ***Your SQL***
 >
 > ```sql
-> -- Write your query here
+> categories: category_id -> category_name
+products: product_id -> product_name, category_id, price
+orders: order_id -> customer_id, order_date, total_amount
+order_items: (order_id, product_id) -> quantity, unit_price
+customers: customer_id -> first_name, last_name, email
 >
 >
 > ```
@@ -93,7 +123,10 @@ Sample data:
 > ***Your SQL***
 >
 > ```sql
-> -- Write your query here
+> All tables meet 3NF criteria:
+- Single-column surrogate keys (like product_id) automatically satisfy 2NF as there can be no partial dependencies.
+- The composite key in order_items (order_id, product_id) determines quantity and unit_price entirely.
+- No non-key attributes determine other non-key attributes (no transitive dependencies).
 >
 >
 > ```
@@ -104,7 +137,7 @@ Sample data:
 > ***Your SQL***
 >
 > ```sql
-> -- Write your query here
+> unit_price is functionally dependent on the specific event of the order, not just the product. If the base product price changes tomorrow, historical orders must retain the exact price the customer paid at checkout. Therefore, it legitimately depends on the composite key (order_id, product_id) representing the transaction.
 >
 >
 > ```
@@ -122,7 +155,20 @@ If TrailShop wanted to track suppliers:
 > ***Your SQL***
 >
 > ```sql
-> -- Write your query here
+> CREATE TABLE suppliers (
+    supplier_id SERIAL PRIMARY KEY,
+    supplier_name VARCHAR(100) NOT NULL,
+    supplier_email VARCHAR(100) NOT NULL,
+    supplier_city VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE product_suppliers (
+    supplier_id INT REFERENCES suppliers(supplier_id) ON DELETE CASCADE,
+    product_id INT REFERENCES products(product_id) ON DELETE CASCADE,
+    supply_price NUMERIC(10,2) NOT NULL,
+    lead_time_days INT NOT NULL,
+    PRIMARY KEY (supplier_id, product_id)
+);
 >
 >
 > ```
@@ -130,8 +176,7 @@ If TrailShop wanted to track suppliers:
 
 > [!NOTE]
 > ***Your Answer***
->
-> *(Write your answer here.)*
+>The design is in 3NF. suppliers has a single-column PK with no transitive dependencies. product_suppliers relies on a composite PK, and both supply_price and lead_time_days are fully dependent on that specific product-supplier combination.
 >
 >
 >
@@ -149,6 +194,7 @@ Answer in your own words (2–4 sentences each):
 > ***Your Answer***
 >
 > *(Write your answer here.)*
+> Normalization is the process of structuring a relational database to minimize data redundancy and ensure data integrity. It solves anomalies that occur when inserting, updating, or deleting data.
 >
 >
 >
@@ -161,6 +207,7 @@ Answer in your own words (2–4 sentences each):
 > ***Your Answer***
 >
 > *(Write your answer here.)*
+> An insertion anomaly blocks you from adding data because another piece of required data is missing (e.g., unable to add a new course room without a scheduled class). A deletion anomaly occurs when deleting one piece of data accidentally wipes out other unrelated facts
 >
 >
 >
@@ -171,6 +218,7 @@ Answer in your own words (2–4 sentences each):
 > ***Your Answer***
 >
 > *(Write your answer here.)*
+> A functional dependency (X → Y) means the value of attribute X uniquely determines the value of attribute Y. In a university context, student_id → student_email; if you know the ID, there is only one possible email.
 >
 >
 >
@@ -181,6 +229,7 @@ Answer in your own words (2–4 sentences each):
 > ***Your Answer***
 >
 > *(Write your answer here.)*
+> A partial dependency occurs when an attribute relies on only a part of a composite primary key. A transitive dependency occurs when a non-key attribute relies on another non-key attribute (A → B, and B → C).
 >
 >
 >
@@ -193,6 +242,7 @@ Answer in your own words (2–4 sentences each):
 > ***Your Answer***
 >
 > *(Write your answer here.)*
+> Every non-key attribute must provide a fact about the key (1NF), the whole key (2NF), and nothing but the key (3NF).
 >
 >
 >
@@ -203,6 +253,7 @@ Answer in your own words (2–4 sentences each):
 > ***Your Answer***
 >
 > *(Write your answer here.)*
+> A partial dependency requires an attribute to depend on only a fraction of the primary key. If a table uses a single-column primary key, there are no "fractions" or parts—an attribute must depend on the entirety of that single column.
 >
 >
 >
@@ -215,6 +266,7 @@ Answer in your own words (2–4 sentences each):
 > ***Your Answer***
 >
 > *(Write your answer here.)*
+> If attribute A determines B, and attribute B determines C, then A determines C. Example: If employee_id → department_id and department_id → building_location, then employee_id → building_location.
 >
 >
 >
@@ -225,17 +277,21 @@ Answer in your own words (2–4 sentences each):
 > ***Your Answer***
 >
 > *(Write your answer here.)*
+> Boyce-Codd Normal Form (BCNF) is a stricter version of 3NF stating that for every functional dependency X → Y, X must be a superkey. A table can be in 3NF but fail BCNF in the rare case where it has overlapping composite candidate keys, and a non-key attribute determines part of a candidate key.
 >
 >
 >
 >
 9. Give two legitimate reasons to denormalize a database.
-10. What is the closure of an attribute set, and how would you use it to determine if an attribute set is a candidate key?
+    To optimize read-heavy query performance by eliminating expensive multi-table joins. 2) To preserve historical snapshot data (like an invoice address or order unit price) that shouldn't change if the master record changes later.
+   
+11. What is the closure of an attribute set, and how would you use it to determine if an attribute set is a candidate key?
 
 > [!NOTE]
 > ***Your Answer***
 >
 > *(Write your answer here.)*
+> The closure of an attribute set is the complete list of all attributes that can be functionally determined by that set. If computing the closure of a set results in all columns of the table, that set is a valid candidate key.
 >
 >
 >
@@ -246,8 +302,20 @@ Answer in your own words (2–4 sentences each):
 > ***Your SQL***
 >
 > ```sql
-> -- Write your query here
+> loan_id -> member_id, isbn, loan_date, return_date
+member_id -> member_name
+isbn -> book_title
 >
+>table b
+>course_id -> course_name, instructor_id
+instructor_id -> instructor_name
+room_id -> building
+(room_id, time_slot) -> course_id   -- A room can only host one course at a given time
+(instructor_id, time_slot) -> course_id -- An instructor can only teach one course at a given time
+>table c
+>emp_id -> emp_name, dept_id
+dept_id -> dept_name, manager_id
+(emp_id, project_id) -> hours
 >
 > ```
 
@@ -314,6 +382,7 @@ Normalize each table to 3NF. Show your work for each step.
 >
 > ```sql
 > -- Write your query here
+> (event_id, attendee_id)
 >
 >
 > ```
@@ -323,7 +392,11 @@ Normalize each table to 3NF. Show your work for each step.
 >
 > ```sql
 > -- Write your query here
->
+>event_id -> event_name, event_date, venue_id
+venue_id -> venue_name, venue_city
+attendee_id -> attendee_name
+(event_id, ticket_type) -> ticket_price
+(event_id, attendee_id) -> ticket_type
 >
 > ```
 3. Check 1NF, 2NF, 3NF
@@ -333,7 +406,34 @@ Normalize each table to 3NF. Show your work for each step.
 > ***Your SQL***
 >
 > ```sql
-> -- Write your query here
+> -- Write your query hereCREATE TABLE venues (
+    venue_id VARCHAR(10) PRIMARY KEY,
+    venue_name VARCHAR(100),
+    venue_city VARCHAR(50)
+);
+CREATE TABLE events (
+    event_id VARCHAR(10) PRIMARY KEY,
+    event_name VARCHAR(100),
+    event_date DATE,
+    venue_id VARCHAR(10) REFERENCES venues(venue_id)
+);
+CREATE TABLE attendees (
+    attendee_id VARCHAR(10) PRIMARY KEY,
+    attendee_name VARCHAR(100)
+);
+CREATE TABLE event_tickets (
+    event_id VARCHAR(10) REFERENCES events(event_id),
+    ticket_type VARCHAR(50),
+    ticket_price NUMERIC(8,2),
+    PRIMARY KEY (event_id, ticket_type)
+);
+CREATE TABLE registrations (
+    event_id VARCHAR(10),
+    attendee_id VARCHAR(10) REFERENCES attendees(attendee_id),
+    ticket_type VARCHAR(50),
+    PRIMARY KEY (event_id, attendee_id),
+    FOREIGN KEY (event_id, ticket_type) REFERENCES event_tickets(event_id, ticket_type)
+);
 >
 >
 > ```
@@ -367,3 +467,20 @@ For each statement, write TRUE or FALSE and briefly explain why.
 6. BCNF is stricter than 3NF — every table in BCNF is also in 3NF.
 7. Armstrong's transitivity axiom states: if X → Y and Y → Z, then X → Z.
 8. Denormalization should be done before normalization to save time.
+
+ANSWERS
+FALSE. 2NF specifically eliminates partial dependencies. A table with a single-column primary key cannot have a partial dependency, so if it's in 1NF, it's automatically in 2NF.
+
+TRUE. Normalization is sequential. The definition of 3NF requires that the relation is already in 2NF.
+
+FALSE. Normalization eliminates redundancy but often scatters data across many tables, requiring computationally expensive JOINs that can decrease read performance.
+
+FALSE. A functional dependency X → Y means X uniquely identifies Y. (If you know X, you know Y).
+
+FALSE. Storing a customer's address in the orders table preserves the historical fact of where the order was actually shipped at that moment in time, which is usually a strict business requirement, not an anomaly.
+
+TRUE. BCNF eliminates all dependencies on non-candidate keys, closing a loophole in 3NF regarding overlapping composite keys.
+
+TRUE. This is the exact definition of Armstrong's transitivity axiom.
+
+FALSE. You must normalize first to create a mathematically sound, anomaly-free logical design. Denormalization is applied afterward only when specific query performance metrics prove it is necessary.

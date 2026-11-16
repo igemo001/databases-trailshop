@@ -338,8 +338,8 @@ A rare case where a table is in 3NF but not BCNF occurs when a table has multipl
 >
 >
 9. Give two legitimate reasons to denormalize a database.
-1. Performance improvement: In systems with large amounts of data and frequent queries, denormalization can reduce the number of table joins needed, making queries run faster.
-2. Simplified reporting: Storing commonly used data together can make reports and analytics easier to generate without complex joins across multiple tables.
+ 1. Performance improvement: In systems with large amounts of data and frequent queries, denormalization can reduce the number of table joins needed, making queries run faster.
+ 2. Simplified reporting: Storing commonly used data together can make reports and analytics easier to generate without complex joins across multiple tables.
 
 
 11. What is the closure of an attribute set, and how would you use it to determine if an attribute set is a candidate key?

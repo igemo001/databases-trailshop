@@ -137,7 +137,7 @@ customers: customer_id -> first_name, last_name, email
 > ***Your SQL***
 >
 > ```sql
-> unit_price is functionally dependent on the specific event of the order, not just the product. If the base product price changes tomorrow, historical orders must retain the exact price the customer paid at checkout. Therefore, it legitimately depends on the composite key (order_id, product_id) representing the transaction.
+> unit\_price is not a normalization violation because it stores the price of the product at the time the order was placed. Product prices may change in the future, but past orders must keep their original sale price. Therefore, unit\_price represents historical transaction data and is correctly stored in order\_items.
 >
 >
 > ```
@@ -176,9 +176,7 @@ CREATE TABLE product_suppliers (
 
 > [!NOTE]
 > ***Your Answer***
->The design is in 3NF. suppliers has a single-column PK with no transitive dependencies. product_suppliers relies on a composite PK, and both supply_price and lead_time_days are fully dependent on that specific product-supplier combination.
->
->
+>The design is in 3NF. The suppliers table has a single-column primary key (supplier_id), and all non-key attributes depend only on it. The product_suppliers table uses the composite key (supplier_id, product_id), and both supply_price and lead_time_days depend on the whole key. There are no partial or transitive dependencies, so the design satisfies 3NF
 >
 >
 
@@ -192,9 +190,11 @@ Answer in your own words (2–4 sentences each):
 
 > [!NOTE]
 > ***Your Answer***
+>Normalization is the process of organizing a database into well\-structured tables to reduce data redundancy and improve data integrity.
+
+It solves problems such as duplicate data, update anomalies, insertion anomalies, and deletion anomalies. By storing each piece of information only once and linking tables with keys, normalization makes the database more consistent and easier to maintain.
+> 
 >
-> *(Write your answer here.)*
-> Normalization is the process of structuring a relational database to minimize data redundancy and ensure data integrity. It solves anomalies that occur when inserting, updating, or deleting data.
 >
 >
 >
@@ -206,8 +206,12 @@ Answer in your own words (2–4 sentences each):
 > [!NOTE]
 > ***Your Answer***
 >
-> *(Write your answer here.)*
-> An insertion anomaly blocks you from adding data because another piece of required data is missing (e.g., unable to add a new course room without a scheduled class). A deletion anomaly occurs when deleting one piece of data accidentally wipes out other unrelated facts
+> An insertion anomaly occurs when you cannot add information to a table without also adding unrelated data. For example, in the supplier\_products table, you cannot add a new supplier unless they already supply a product because product\_id is part of the primary key.
+
+A deletion anomaly occurs when deleting a row unintentionally removes important information. For example, if the only product supplied by a supplier is removed, deleting that row also deletes all information about the supplier.
+
+
+> 
 >
 >
 >
@@ -217,8 +221,16 @@ Answer in your own words (2–4 sentences each):
 > [!NOTE]
 > ***Your Answer***
 >
-> *(Write your answer here.)*
-> A functional dependency (X → Y) means the value of attribute X uniquely determines the value of attribute Y. In a university context, student_id → student_email; if you know the ID, there is only one possible email.
+> A functional dependency is a relationship where one attribute uniquely determines another attribute. In other words, if you know the value of one attribute, you can determine the value of another.
+
+example:
+
+student\_id → student\_name, major
+
+This means each student\_id uniquely identifies a student's name and major. For example, if student\_id = 1001, it will always correspond to the same student and major.
+
+
+> 
 >
 >
 >
@@ -228,8 +240,18 @@ Answer in your own words (2–4 sentences each):
 > [!NOTE]
 > ***Your Answer***
 >
-> *(Write your answer here.)*
-> A partial dependency occurs when an attribute relies on only a part of a composite primary key. A transitive dependency occurs when a non-key attribute relies on another non-key attribute (A → B, and B → C).
+> A partial dependency occurs when a non\-key attribute depends on only part of a composite primary key. For example, if (student\_id, course\_id) is the primary key, and student\_name depends only on student\_id, then student\_name has a partial dependency.
+
+A transitive dependency occurs when a non\-key attribute depends on another non\-key attribute. For example:
+
+student\_id → department\_id
+
+department\_id → department\_name
+
+Here, department\_name is transitively dependent on student\_id through department\_id.
+
+
+>
 >
 >
 >
@@ -240,9 +262,16 @@ Answer in your own words (2–4 sentences each):
 
 > [!NOTE]
 > ***Your Answer***
+>The informal rule for 3NF is:
+
+"Every non\-key attribute must depend on the key, the whole key, and nothing but the key."
+
+- The key: Every non\-key attribute must depend on a primary key.
+- The whole key: Non\-key attributes must depend on the entire key, not just part of a composite key (no partial dependencies).
+- Nothing but the key: Non\-key attributes must not depend on other non\-key attributes (no transitive dependencies).
+
+
 >
-> *(Write your answer here.)*
-> Every non-key attribute must provide a fact about the key (1NF), the whole key (2NF), and nothing but the key (3NF).
 >
 >
 >
@@ -252,8 +281,12 @@ Answer in your own words (2–4 sentences each):
 > [!NOTE]
 > ***Your Answer***
 >
-> *(Write your answer here.)*
-> A partial dependency requires an attribute to depend on only a fraction of the primary key. If a table uses a single-column primary key, there are no "fractions" or parts—an attribute must depend on the entirety of that single column.
+> Partial dependencies can only occur in tables with composite primary keys because there must be more than one key attribute for a non\-key attribute to depend on only part of the key.
+
+For example, if (student\_id, course\_id) is the primary key and student\_name depends only on student\_id, then student\_name has a partial dependency. With a single\-column primary key, there is no "part" of the key to depend on, so partial dependencies cannot occur.
+
+
+>
 >
 >
 >
@@ -265,8 +298,24 @@ Answer in your own words (2–4 sentences each):
 > [!NOTE]
 > ***Your Answer***
 >
-> *(Write your answer here.)*
-> If attribute A determines B, and attribute B determines C, then A determines C. Example: If employee_id → department_id and department_id → building_location, then employee_id → building_location.
+> Armstrong's transitivity axiom states:
+
+If A → B and B → C, then A → C.
+
+Example in a university database:
+
+student\_id → professor\_id
+
+professor\_id → professor\_name
+
+Using transitivity:
+
+student\_id → professor\_name
+
+This means that if a student ID determines a professor ID, and the professor ID determines the professor's name, then the student ID indirectly determines the professor's name.
+
+
+> 
 >
 >
 >
@@ -276,22 +325,44 @@ Answer in your own words (2–4 sentences each):
 > [!NOTE]
 > ***Your Answer***
 >
-> *(Write your answer here.)*
-> Boyce-Codd Normal Form (BCNF) is a stricter version of 3NF stating that for every functional dependency X → Y, X must be a superkey. A table can be in 3NF but fail BCNF in the rare case where it has overlapping composite candidate keys, and a non-key attribute determines part of a candidate key.
+> BCNF (Boyce\-Codd Normal Form) is a stricter version of 3NF. A table is in BCNF if every determinant is a candidate key.
+
+The difference is that 3NF allows some dependencies where a non\-key attribute depends on a candidate key indirectly, while BCNF does not. Therefore, every table that is in BCNF is also in 3NF, but not every 3NF table is in BCNF.
+
+A rare case where a table is in 3NF but not BCNF occurs when a table has multiple candidate keys and one candidate key determines another candidate key. In this situation, the table satisfies 3NF but violates BCNF because the determinant is not a superkey.
+
+
+> 
 >
 >
 >
 >
 9. Give two legitimate reasons to denormalize a database.
-    To optimize read-heavy query performance by eliminating expensive multi-table joins. 2) To preserve historical snapshot data (like an invoice address or order unit price) that shouldn't change if the master record changes later.
-   
+1. Performance improvement: In systems with large amounts of data and frequent queries, denormalization can reduce the number of table joins needed, making queries run faster.
+2. Simplified reporting: Storing commonly used data together can make reports and analytics easier to generate without complex joins across multiple tables.
+
+
 11. What is the closure of an attribute set, and how would you use it to determine if an attribute set is a candidate key?
 
 > [!NOTE]
 > ***Your Answer***
 >
-> *(Write your answer here.)*
-> The closure of an attribute set is the complete list of all attributes that can be functionally determined by that set. If computing the closure of a set results in all columns of the table, that set is a valid candidate key.
+>The closure of an attribute set is the set of all attributes that can be determined from that attribute set using the functional dependencies in a database.
+
+To determine whether an attribute set is a candidate key, compute its closure. If the closure contains all attributes in the table, the attribute set is a superkey. If no subset of that attribute set can also determine all attributes, it is a candidate key.
+
+For example, if:
+
+student\_id → student\_name, major
+
+then the closure of \{student\_id\} is:
+
+\{student\_id, student\_name, major\}
+
+If these are all the attributes in the table, then student\_id is a candidate key.
+
+
+>
 >
 >
 >

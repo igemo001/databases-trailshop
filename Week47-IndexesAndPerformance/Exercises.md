@@ -38,11 +38,11 @@ Record your results in a table like this:
 
 | Query | Scan Type | Exec Time (ms) | Rows Removed by Filter |
 |-------|-----------|-----------------|------------------------|
-| A     |           |                 |                        |
-| B     |           |                 |                        |
-| C     |           |                 |                        |
-| D     |           |                 |                        |
-| E     |           |                 |                        |
+| A     |   Seq      0.042                9                   |
+| B     |   Seq       0.070               8                     |
+| C     |   Seq       0.058               4                    |
+| D     |  Bitmap Heap 0.061              0                     |
+| E     |  Seq         0.114              8                       |
 
 ### Step 2 — Create Indexes
 
@@ -62,11 +62,11 @@ Run the same five queries with `EXPLAIN ANALYZE` again. Fill in your comparison 
 
 | Query | Before Scan | Before Time (ms) | After Scan | After Time (ms) | Improvement Factor |
 |-------|-------------|-------------------|------------|------------------|--------------------|
-| A     |             |                   |            |                  |                    |
-| B     |             |                   |            |                  |                    |
-| C     |             |                   |            |                  |                    |
-| D     |             |                   |            |                  |                    |
-| E     |             |                   |            |                  |                    |
+| A     | Seq             0.042              |    index        |  0.110               | 0.38                   |
+| B     | Seq            | 0.070                  |  index         |  0.082                | 0.85                
+| C     | Seq            |  0.058                 |   index         |   0.040               | 1.45                
+| D     | Bitmap Heap       0.061                |  index          |  0.059                   1.04     
+| E     |  Seq           |   0.114               |  Nested loop        |       0.074         1.55                 |
 
 ### Step 4 — Recommendation
 
